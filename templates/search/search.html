@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% block title %}Search & Q&A | Legal Document Intelligence{% endblock %}
+{% block content %}
+<section class="page-head reveal">
+  <div>
+    <h1>Search + Q&A</h1>
+    <p class="muted">Search by keyword or meaning. Answers always include citations.</p>
+  </div>
+</section>
+
+<section class="grid-two reveal">
+  <div class="card">
+    <h2>Keyword search</h2>
+    <form class="stack" id="keyword-search-form" action="{% url 'search:keyword_search' %}" method="post">
+      {% csrf_token %}
+      <input type="text" name="query" placeholder="Search for a clause or term" />
+      <div class="filters-row">
+        <select name="doc_type">
+          <option value="">All types</option>
+          <option value="pdf">PDF</option>
+          <option value="docx">DOCX</option>
+          <option value="txt">TXT</option>
+        </select>
+        <input type="text" name="date_range" placeholder="YYYY-MM-DD to YYYY-MM-DD" />
+      </div>
+      <button class="btn btn-primary" type="submit">Search</button>
+    </form>
+    <div class="results">
+      <div class="result-item">
+        <strong>Retention clause</strong>
+        <p class="muted">"...data shall be retained for 60 days..."</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Semantic search</h2>
+    <form class="stack" id="semantic-search-form" action="{% url 'search:semantic_search' %}" method="post">
+      {% csrf_token %}
+      <input type="text" name="query" placeholder="Ask in natural language" />
+      <div class="filters-row">
+        <select name="section_scope">
+          <option value="">All sections</option>
+          <option value="definitions">Definitions</option>
+          <option value="termination">Termination</option>
+        </select>
+        <input type="text" name="date_range" placeholder="YYYY-MM-DD to YYYY-MM-DD" />
+      </div>
+      <button class="btn btn-outline" type="submit">Run semantic search</button>
+    </form>
+    <div class="results">
+      <div class="result-item">
+        <strong>Termination window</strong>
+        <p class="muted">"...either party may terminate with 30 days notice..."</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="card reveal">
+  <h2>Ask a question</h2>
+  <form class="stack" id="qa-form" action="/qa/ask" method="post">
+    {% csrf_token %}
+    <input type="text" name="question" placeholder="What happens if the contract is terminated early?" />
+    <button class="btn btn-primary" type="submit">Get answer</button>
+  </form>
+  <div class="answer">
+    <h3>Answer</h3>
+    <p class="muted">
+      The agreement allows termination with notice and includes retention obligations.
+    </p>
+    <div class="citations">
+      <span class="pill">Doc 1 • Clause 8.1</span>
+      <span class="pill">Doc 1 • Clause 12</span>
+    </div>
+  </div>
+</section>
+
+{% include 'search/search_scripts.html' %}
+{% endblock %}

@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Upload | Document Intelligence{% endblock %}
+{% block content %}
+<section class="page-head reveal">
+  <div>
+    <h1>Upload a document</h1>
+    <p class="muted">All documents are deleted 60 days after upload.</p>
+  </div>
+</section>
+
+<section class="card upload-card reveal">
+  <form action="{% url 'documents:upload' %}" method="post" enctype="multipart/form-data" class="stack processing-form">
+    {% csrf_token %}
+    <div class="upload-drop">
+      <input class="file-input" type="file" name="file" accept=".pdf,.docx,.txt" required />
+      <div>
+        <h3>Drag & drop or browse</h3>
+        <p class="muted">PDF, DOCX, or TXT. Max size 25 MB.</p>
+      </div>
+    </div>
+    <label>
+      Title (optional)
+      <input type="text" name="title" placeholder="Leave blank to use filename" />
+    </label>
+    <button class="btn btn-primary" type="submit">Upload & process</button>
+  </form>
+</section>
+
+{% endblock %}

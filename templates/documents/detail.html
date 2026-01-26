@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}Document Viewer | Legal Document Intelligence{% endblock %}
+{% block content %}
+<section class="viewer-grid reveal">
+  <aside class="card viewer-sidebar">
+    <h2>Evidence</h2>
+    <ul class="list">
+      <li><a href="#snippet-1">Clause 4.2 – Termination terms</a></li>
+      <li><a href="#snippet-2">Clause 8.1 – Data retention</a></li>
+      <li><a href="#snippet-3">Clause 12 – Jurisdiction</a></li>
+    </ul>
+    <a class="btn btn-outline" href="/documents/1/download">Download original</a>
+  </aside>
+
+  <article class="card viewer-content">
+    <div class="doc-header">
+      <h1>Example Contract</h1>
+      <p class="muted">PDF • Uploaded today • 14 pages</p>
+    </div>
+    <div class="doc-text">
+      <p id="snippet-1" class="highlight">1. Definitions. This Agreement...</p>
+      <p>2. Scope. The parties agree...</p>
+      <p id="snippet-2" class="highlight">8. Retention. Data shall be retained...</p>
+      <p id="snippet-3" class="highlight">12. Jurisdiction. This Agreement is governed by...</p>
+    </div>
+  </article>
+</section>
+
+<section class="card reveal">
+  <h2>Extracted images</h2>
+  <div class="image-grid">
+    <div class="image-tile">Image 1</div>
+    <div class="image-tile">Image 2</div>
+    <div class="image-tile">Image 3</div>
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,154 @@
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Keyword search form
+    const keywordForm = document.getElementById('keyword-search-form');
+    if (keywordForm) {
+        keywordForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            performSearch('keyword');
+        });
+    }
+
+    // Semantic search form
+    const semanticForm = document.getElementById('semantic-search-form');
+    if (semanticForm) {
+        semanticForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            performSearch('semantic');
+        });
+    }
+
+    // Q&A form
+    const qaForm = document.getElementById('qa-form');
+    if (qaForm) {
+        qaForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            performQA();
+        });
+    }
+});
+
+function performSearch(searchType) {
+    const form = document.getElementById(searchType + '-search-form');
+    const formData = new FormData(form);
+    const resultsDiv = form.querySelector('.results');
+
+    // Show loading
+    resultsDiv.innerHTML = '<div class="loading">Searching...</div>';
+
+    // Build filters object
+    const filters = {};
+    const docType = formData.get('doc_type');
+    if (docType) {
+        filters.file_type = docType;
+    }
+
+    // Add filters to form data
+    formData.set('filters', JSON.stringify(filters));
+
+    // Determine URL
+    const url = searchType === 'keyword'
+        ? '{% url "search:keyword_search" %}'
+        : '{% url "search:semantic_search" %}';
+
+    // Perform search
+    fetch(url, {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRFToken': formData.get('csrfmiddlewaretoken')
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.error) {
+            resultsDiv.innerHTML = `<div class="error">${data.error}</div>`;
+        } else {
+            displaySearchResults(data, resultsDiv);
+        }
+    })
+    .catch(error => {
+        resultsDiv.innerHTML = `<div class="error">Search failed: ${error.message}</div>`;
+    });
+}
+
+function displaySearchResults(data, resultsDiv) {
+    if (data.results.length === 0) {
+        resultsDiv.innerHTML = '<div class="no-results">No results found</div>';
+        return;
+    }
+
+    let html = `<div class="results-count">${data.total} results found</div>`;
+
+    data.results.forEach(result => {
+        html += `
+            <div class="result-item">
+                <strong>${result.document_title}</strong>
+                <p class="muted" style="white-space: pre-wrap; word-wrap: break-word;">${result.snippet}</p>
+                <div class="result-meta">
+                    <span class="pill">${result.document_type.toUpperCase()}</span>
+                    ${result.score ? `<span class="score">Score: ${result.score}</span>` : ''}
+                </div>
+            </div>
+        `;
+    });
+
+    resultsDiv.innerHTML = html;
+}
+
+function performQA() {
+    const form = document.getElementById('qa-form');
+    const formData = new FormData(form);
+    const answerDiv = form.parentElement.querySelector('.answer');
+
+    // Show loading
+    answerDiv.innerHTML = '<div class="loading">Processing question...</div>';
+
+    // Perform Q&A
+    fetch('{% url "qa:ask" %}', {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRFToken': formData.get('csrfmiddlewaretoken')
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.error) {
+            answerDiv.innerHTML = `<div class="error">${data.error}</div>`;
+        } else {
+            displayQAAnswer(data, answerDiv);
+        }
+    })
+    .catch(error => {
+        answerDiv.innerHTML = `<div class="error">Q&A failed: ${error.message}</div>`;
+    });
+}
+
+function displayQAAnswer(data, answerDiv) {
+    let html = '<h3>Answer</h3>';
+
+    if (data.evidence_insufficient) {
+        html += `<p class="muted warning">${data.answer}</p>`;
+    } else {
+        html += `<p class="answer-text">${data.answer}</p>`;
+    }
+
+    // Add citations if available
+    if (data.citations && data.citations.length > 0) {
+        html += '<div class="citations"><h4>Citations:</h4>';
+        data.citations.forEach((citation, index) => {
+            html += `
+                <div class="citation-item">
+                    <span class="citation-ref">${citation.reference}</span>
+                    <span class="citation-doc">${citation.document_title}</span>
+                    <a href="/documents/${citation.document_id}" class="citation-link" target="_blank">View Document</a>
+                </div>
+            `;
+        });
+        html += '</div>';
+    }
+
+    answerDiv.innerHTML = html;
+}
+</script>

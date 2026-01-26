@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}Login | Legal Document Intelligence{% endblock %}
+{% block content %}
+<section class="auth-grid">
+  <div class="card glass reveal">
+    <h1>Welcome back</h1>
+    <p class="muted">Access your document library and evidence-first Q&A.</p>
+    <form class="stack form-card" action="{% url 'accounts:login' %}" method="post">
+      {% csrf_token %}
+      <label>
+        <span class="label-text">Email</span>
+        <input type="email" name="email" placeholder="you@domain.com" required />
+      </label>
+      <label>
+        <span class="label-text">Password</span>
+        <input type="password" name="password" placeholder="********" required />
+      </label>
+      <button class="btn btn-primary" type="submit">Login</button>
+    </form>
+    <div class="note">
+      New here?
+      <a class="btn btn-outline" href="{% url 'accounts:signup' %}">Create an account</a>
+    </div>
+  </div>
+  <div class="card splash reveal">
+    <div class="splash-inner">
+      <h2>Evidence-first insights</h2>
+      <p>
+        Ask any question about your legal documents and get grounded answers
+        with citations to exact clauses.
+      </p>
+      <div class="pill-row">
+        <span class="pill">OCR + text extraction</span>
+        <span class="pill">Section detection</span>
+        <span class="pill">Semantic search</span>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

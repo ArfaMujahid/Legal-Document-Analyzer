@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}Sign Up | Legal Document Intelligence{% endblock %}
+{% block content %}
+<section class="auth-grid">
+  <div class="card glass reveal">
+    <h1>Create your workspace</h1>
+    <p class="muted">Your email is your unique login. We never share your data.</p>
+    <form class="stack form-card" action="{% url 'accounts:signup' %}" method="post">
+      {% csrf_token %}
+      <label>
+        <span class="label-text">Email</span>
+        <input type="email" name="email" placeholder="you@domain.com" required />
+      </label>
+      <label>
+        <span class="label-text">Password</span>
+        <input type="password" name="password1" placeholder="At least 8 characters" required />
+      </label>
+      <label>
+        <span class="label-text">Confirm Password</span>
+        <input type="password" name="password2" placeholder="Repeat password" required />
+      </label>
+      <button class="btn btn-primary" type="submit">Create account</button>
+    </form>
+    <div class="note">
+      Already have an account?
+      <a class="btn btn-outline" href="{% url 'accounts:login' %}">Login</a>
+    </div>
+  </div>
+  <div class="card splash reveal">
+    <div class="splash-inner">
+      <h2>Built for legal workflows</h2>
+      <p>
+        Upload contracts, policies, or statutes. Search by keyword or meaning.
+        Every answer cites the source.
+      </p>
+      <div class="pill-row">
+        <span class="pill">Free & open stack</span>
+        <span class="pill">60-day retention</span>
+        <span class="pill">User isolation</span>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

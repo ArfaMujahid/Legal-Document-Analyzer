@@ -1,0 +1,279 @@
+{% extends "base.html" %}
+{% block title %}{{ document.title|default:document.file_name }} | Document Intelligence{% endblock %}
+{% block content %}
+<section class="page-head reveal">
+  <div>
+    <h1>{{ document.title|default:document.file_name }}</h1>
+    <p class="muted">
+      {{ document.file_type|upper }} • {{ document.file_size|filesizeformat }} •
+      Uploaded {{ document.upload_time|date:"M d, Y" }}
+      {% if document.status != 'complete' %}
+        • <span class="badge bg-warning">{{ document.get_status_display }}</span>
+      {% endif %}
+    </p>
+  </div>
+  <div class="page-actions">
+    <a href="{% url 'documents:download' document.id %}" class="btn btn-ghost">Download</a>
+    <form action="{% url 'documents:delete' document.id %}" method="post" style="display: inline;" id="delete-form">
+      {% csrf_token %}
+      <button class="btn btn-outline" type="button" onclick="showDeleteConfirmModal()">Delete</button>
+    </form>
+  </div>
+</section>
+
+{% if document.status == 'complete' %}
+<!-- Document Text Section (Expandable) -->
+<section class="card reveal">
+  <div class="expandable-header" onclick="toggleDocumentText()">
+    <h2>Document Text</h2>
+    <div class="text-preview" id="text-preview">
+      {% if document.extracted_text %}
+        {{ document.extracted_text|truncatechars:300 }}...
+      {% else %}
+        {% with first_chunk=document.textchunk_set.first %}
+          {% if first_chunk %}
+            {{ first_chunk.text|truncatechars:300 }}...
+          {% else %}
+            No text content available
+          {% endif %}
+        {% endwith %}
+      {% endif %}
+    </div>
+    <button class="expand-btn" id="text-expand-btn">
+      <span class="expand-text">Show more</span>
+    </button>
+  </div>
+  <div class="document-text" id="document-text" style="display: none;">
+    {% if document.extracted_text %}
+      <div class="text-content">
+        {{ document.extracted_text|linebreaks }}
+      </div>
+    {% else %}
+      <!-- Show only the first chunk for now -->
+      {% with first_chunk=document.textchunk_set.first %}
+        {% if first_chunk %}
+          <div class="text-content">
+            {{ first_chunk.text|linebreaks }}
+          </div>
+        {% else %}
+          <p class="muted">No text content available</p>
+        {% endif %}
+      {% endwith %}
+    {% endif %}
+  </div>
+</section>
+
+<!-- Search Section -->
+<section class="card reveal">
+  <h2>Search Document</h2>
+  <div class="search-container">
+    <div class="search-form">
+      <input type="text" id="search-query" placeholder="Enter keywords or question..." class="search-input">
+      <div class="search-type-toggle">
+        <label class="radio-label">
+          <input type="radio" name="search-type" value="keyword" checked>
+          <span>Keyword</span>
+        </label>
+        <label class="radio-label">
+          <input type="radio" name="search-type" value="semantic">
+          <span>Semantic</span>
+        </label>
+      </div>
+      <button id="search-btn" class="btn btn-primary">Search</button>
+    </div>
+    <div id="search-results" class="search-results" style="display: none;">
+      <div id="results-list"></div>
+    </div>
+  </div>
+</section>
+
+<section class="card reveal">
+  <h2>Sections</h2>
+  <div class="sections-list">
+    {% for section in document.section_set.all %}
+      <div class="section-item" data-start="{{ section.start_offset }}" data-end="{{ section.end_offset }}">
+        <h3>{{ section.title|default:section.label }}</h3>
+        <p class="muted">Confidence: {{ section.confidence|floatformat:2 }}</p>
+      </div>
+    {% empty %}
+      <p class="muted">No sections detected</p>
+    {% endfor %}
+  </div>
+</section>
+{% else %}
+<section class="card reveal">
+  <div class="processing-status">
+    <h2>Document Processing</h2>
+    <p class="muted">Status: {{ document.get_status_display }}</p>
+    {% if document.status == 'failed' %}
+      <div class="alert alert-danger">
+        Document processing failed, please try again
+      </div>
+    {% else %}
+      <div class="progress-bar">
+        <div class="progress" style="width: 100%"></div>
+      </div>
+      <p class="muted">Please wait while we process your document...</p>
+    {% endif %}
+  </div>
+</section>
+{% endif %}
+
+<script>
+// Delete confirmation modal
+function showDeleteConfirmModal() {
+  showConfirmModal(
+    'Delete Document',
+    'Are you sure you want to delete this document? This action cannot be undone.',
+    function() {
+      document.getElementById('delete-form').submit();
+    }
+  );
+}
+
+// Toggle document text visibility
+function toggleDocumentText() {
+  const textContainer = document.getElementById('document-text');
+  const expandBtn = document.getElementById('text-expand-btn');
+  const expandText = expandBtn.querySelector('.expand-text');
+  const textPreview = document.getElementById('text-preview');
+
+  if (textContainer.style.display === 'none') {
+    textContainer.style.display = 'block';
+    expandText.textContent = 'Show less';
+    textPreview.style.display = 'none';
+  } else {
+    textContainer.style.display = 'none';
+    expandText.textContent = 'Show more';
+    textPreview.style.display = 'block';
+  }
+}
+
+// Search functionality
+document.addEventListener('DOMContentLoaded', function() {
+  const searchBtn = document.getElementById('search-btn');
+  const searchQuery = document.getElementById('search-query');
+  const searchResults = document.getElementById('search-results');
+  const resultsList = document.getElementById('results-list');
+
+  searchBtn.addEventListener('click', performSearch);
+  searchQuery.addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+      performSearch();
+    }
+  });
+
+  function performSearch() {
+    const query = searchQuery.value.trim();
+    if (!query) {
+      alert('Please enter a search query');
+      return;
+    }
+
+    const searchType = document.querySelector('input[name="search-type"]:checked').value;
+    const documentId = {{ document.id }};
+
+    // Show loading
+    searchResults.style.display = 'block';
+    resultsList.innerHTML = '<div class="loading">Searching...</div>';
+
+    // Perform search
+    const url = searchType === 'keyword'
+      ? `/documents/${documentId}/search/keyword/`
+      : `/documents/${documentId}/search/semantic/`;
+
+    const formData = new FormData();
+    formData.append('query', query);
+    formData.append('document_id', documentId);
+
+    fetch(url, {
+      method: 'POST',
+      headers: {
+        'X-CSRFToken': getCookie('csrftoken')
+      },
+      body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.error) {
+        resultsList.innerHTML = `<div class="error">${data.error}</div>`;
+      } else {
+        displayResults(data.results, data.search_type, data.answer);
+      }
+    })
+    .catch(error => {
+      resultsList.innerHTML = `<div class="error">Search failed: ${error.message}</div>`;
+    });
+  }
+
+  function displayResults(results, searchType, answer) {
+    if (results.length === 0) {
+      resultsList.innerHTML = '<p class="muted">No results found</p>';
+      return;
+    }
+
+    let html = '';
+
+    // Add LLM answer if available
+    if (answer) {
+      html += `
+        <div class="llm-answer">
+          <p>${answer}</p>
+        </div>
+      `;
+    }
+
+    html += `<p class="muted">Found ${results.length} result${results.length !== 1 ? 's' : ''}</p>`;
+
+    html += '<div class="results-container">';
+    results.forEach(result => {
+      html += `
+        <div class="search-result-item">
+          <div class="result-snippet">${result.snippet}</div>
+          <div class="result-meta">
+            ${result.score ? `<small>Score: ${result.score}</small>` : ''}
+          </div>
+        </div>
+      `;
+    });
+    html += '</div>';
+
+    resultsList.innerHTML = html;
+  }
+
+  // Helper function to get CSRF token
+  function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+      const cookies = document.cookie.split(';');
+      for (let i = 0; i < cookies.length; i++) {
+        const cookie = cookies[i].trim();
+        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+          break;
+        }
+      }
+    }
+    return cookieValue;
+  }
+});
+
+function scrollToOffset(offset) {
+  // Find the chunk containing this offset
+  const chunks = document.querySelectorAll('.text-chunk');
+  for (let chunk of chunks) {
+    const chunkStart = parseInt(chunk.dataset.start);
+    const chunkEnd = parseInt(chunk.dataset.end);
+    if (offset >= chunkStart && offset <= chunkEnd) {
+      chunk.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      // Highlight temporarily
+      chunk.style.backgroundColor = '#fff3cd';
+      setTimeout(() => {
+        chunk.style.backgroundColor = '';
+      }, 2000);
+      break;
+    }
+  }
+}
+</script>
+{% endblock %}

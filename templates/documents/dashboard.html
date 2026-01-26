@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% block title %}Dashboard | Document Intelligence{% endblock %}
+{% block content %}
+<section class="page-head reveal">
+  <div>
+    <h1>Document Library</h1>
+    <p class="muted">All documents are deleted 60 days after upload.</p>
+  </div>
+  <a class="btn btn-primary" href="{% url 'documents:upload' %}">Upload document</a>
+</section>
+
+<section class="filters card reveal">
+  <form method="get" class="filters-row">
+    <div class="filter-group">
+      <label>
+        Type
+        <select name="type">
+          <option value="">All</option>
+          <option value="pdf" {% if request.GET.type == 'pdf' %}selected{% endif %}>PDF</option>
+          <option value="docx" {% if request.GET.type == 'docx' %}selected{% endif %}>DOCX</option>
+          <option value="txt" {% if request.GET.type == 'txt' %}selected{% endif %}>TXT</option>
+        </select>
+      </label>
+      <label>
+        Date range
+        <input type="text" name="date_range" placeholder="YYYY-MM-DD to YYYY-MM-DD" value="{{ request.GET.date_range }}" />
+      </label>
+    </div>
+    <button class="btn btn-primary" type="submit">Apply Filters</button>
+  </form>
+</section>
+
+<section class="grid reveal stagger">
+  {% for document in documents %}
+    <article class="card doc-card" style="--i:{{ forloop.counter }};">
+      <div class="doc-meta">
+        <h3>{{ document.title|default:document.file_name }}</h3>
+        <p class="muted">{{ document.file_type|upper }} • {{ document.file_size|filesizeformat }} • Uploaded {{ document.upload_time|date:"M d, Y" }} at {{ document.upload_time|time:"g:i A" }}</p>
+        {% if document.status == 'failed' %}
+          <span class="badge badge-failed">Failed</span>
+        {% elif document.status == 'complete' %}
+          <span class="badge badge-success">Success</span>
+        {% elif document.status == 'processing' %}
+          <span class="badge bg-warning">{{ document.get_status_display }}</span>
+        {% endif %}
+      </div>
+      <div class="doc-actions">
+        <a class="btn btn-ghost" href="{% url 'documents:view' document.id %}">View</a>
+        <form action="{% url 'documents:delete' document.id %}" method="post" style="display: inline;" class="delete-form" data-document-title="{{ document.title|default:document.file_name }}">
+          {% csrf_token %}
+          <button class="btn btn-outline" type="submit">Delete</button>
+        </form>
+      </div>
+    </article>
+  {% empty %}
+    <article class="card empty-card" style="--i:1;">
+      <h3>No documents yet</h3>
+      <p class="muted">Use the Upload document button to add your first file.</p>
+    </article>
+  {% endfor %}
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const deleteForms = document.querySelectorAll('.delete-form');
+
+  deleteForms.forEach(form => {
+    form.addEventListener('submit', function(e) {
+      e.preventDefault();
+
+      const documentTitle = this.getAttribute('data-document-title');
+      const form = this;
+
+      showConfirmModal(
+        'Delete Document',
+        'Are you sure you want to delete this document? This action cannot be undone.',
+        function() {
+          form.submit();
+        }
+      );
+    });
+  });
+});
+</script>
+{% endblock %}

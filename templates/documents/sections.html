@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Sections | Legal Document Intelligence{% endblock %}
+{% block content %}
+<section class="page-head reveal">
+  <div>
+    <h1>Sections & Clauses</h1>
+    <p class="muted">Navigate the document structure and jump to any section.</p>
+  </div>
+  <a class="btn btn-ghost" href="{% url 'documents:view' document.id %}">Back to viewer</a>
+</section>
+
+<section class="card reveal">
+  <div class="search-inline">
+    <input type="text" placeholder="Search section titles" />
+    <button class="btn btn-ghost" type="button">Search</button>
+  </div>
+  <ul class="tree">
+    <li>
+      <span class="tree-label">1. Definitions</span>
+      <span class="confidence">0.92</span>
+    </li>
+    <li>
+      <span class="tree-label">2. Scope</span>
+      <span class="confidence">0.88</span>
+    </li>
+    <li>
+      <span class="tree-label">8. Retention</span>
+      <span class="confidence">0.84</span>
+    </li>
+    <li>
+      <span class="tree-label">12. Jurisdiction</span>
+      <span class="confidence">0.91</span>
+    </li>
+  </ul>
+</section>
+{% endblock %}

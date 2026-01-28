@@ -1,4 +1,4 @@
-# Legal Document Intelligence Platform
+# Document Intelligence Platform
 
 A Django-based web application for analyzing legal documents with AI-powered search and Q&A capabilities.
 

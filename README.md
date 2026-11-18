@@ -64,10 +64,11 @@ A Django-based web application for analyzing legal documents with AI-powered sea
 
 ### Tech Stack
 
-- **Backend**: Django 6.0.1
-- **Database**: SQLite 
-- **Vector DB**: Qdrant Cloud
-- **AI Models**: OpenRouter (free models)
+- **Backend**: Django 6.0.1 (Python 3.12+)
+- **Database**: SQLite
+- **Vector DB**: Qdrant (embedded on-disk by default; Qdrant server/Cloud optional)
+- **Embeddings**: `sentence-transformers/all-MiniLM-L6-v2`, run locally (384-dim)
+- **LLM answers**: any OpenRouter model (optional)
 - **Frontend**: Django Templates with minimal JavaScript
 
 ### Quick Start
@@ -75,14 +76,8 @@ A Django-based web application for analyzing legal documents with AI-powered sea
 #### 1. Setup Virtual Environment
 
 ```bash
-# Create virtual environment
-python -m venv .venv
-
-# Activate on Windows
-.venv\Scripts\activate
-
-# Activate on Linux/Mac
-source .venv/bin/activate
+python3 -m venv .venv
+source .venv/bin/activate      # Windows: .venv\Scripts\activate
 ```
 
 #### 2. Install Dependencies
@@ -91,39 +86,24 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
+The first document you process downloads the embedding model (~90 MB) from Hugging Face.
+
 #### 3. Configure Environment
 
-Create a `.env` file in the project root:
-
-```env
-# Django Settings
-DJANGO_SECRET_KEY=your-secret-key-here
-DJANGO_DEBUG=true
-DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1
-
-# Database (using SQLite for development)
-DB_ENGINE=django.db.backends.sqlite3
-DB_NAME=db.sqlite3
-
-# OpenRouter API (get free API key from openrouter.ai)
-OPENROUTER_API_KEY=sk-or-v1-your-api-key
-OPENROUTER_BASE_URL=https://openrouter.ai/api/v1
-OPENROUTER_LLM_MODEL=google/gemma-3n-e4b-it:free
-OPENROUTER_EMBEDDING_MODEL=google/gemma-3n-e4b-it:free
-
-# Qdrant Vector Database (get free account from qdrant.tech)
-QDRANT_URL=https://your-cluster.cloud.qdrant.io
-QDRANT_API_KEY=your-qdrant-api-key
-
-# Retention Settings
-RETENTION_DAYS=60
-LOG_RETENTION_DAYS=90
+```bash
+cp .env.example .env
 ```
+
+Then edit `.env`:
+
+- `DJANGO_SECRET_KEY`: any long random string.
+- `OPENROUTER_API_KEY` and `OPENROUTER_LLM_MODEL` (optional): enable the AI answer on semantic search. Without them, keyword and semantic search still work.
+- `QDRANT_URL` (optional): leave empty to store vectors in `./qdrant_data` with no server. To use a server, run `docker run -p 6333:6333 qdrant/qdrant` and set `QDRANT_URL=http://localhost:6333`, or point it at Qdrant Cloud with `QDRANT_API_KEY`.
+- OCR for scanned PDFs needs the Tesseract binary (`brew install tesseract`). Digital PDFs, DOCX and TXT don't.
 
 #### 4. Run Database Migrations
 
 ```bash
-python manage.py makemigrations
 python manage.py migrate
 ```
 

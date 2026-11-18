@@ -9,22 +9,43 @@ import numpy as np
 from sentence_transformers import SentenceTransformer
 
 
+EMBEDDING_MODEL_NAME = "sentence-transformers/all-MiniLM-L6-v2"
+
+# Process-wide singletons: the embedding model takes seconds to load, and
+# embedded (local-mode) Qdrant allows only one client per storage folder.
+_embedding_model = None
+_qdrant_client = None
+
+
+def get_embedding_model():
+    global _embedding_model
+    if _embedding_model is None:
+        _embedding_model = SentenceTransformer(EMBEDDING_MODEL_NAME)
+    return _embedding_model
+
+
+def get_qdrant_client():
+    """Qdrant Cloud/server when QDRANT_URL is set, otherwise embedded on-disk storage."""
+    global _qdrant_client
+    if _qdrant_client is None:
+        if settings.QDRANT_URL:
+            _qdrant_client = QdrantClient(
+                url=settings.QDRANT_URL,
+                api_key=settings.QDRANT_API_KEY or None,
+                timeout=10.0,
+            )
+        else:
+            _qdrant_client = QdrantClient(path=str(settings.QDRANT_LOCAL_PATH))
+    return _qdrant_client
+
+
 class VectorService:
     """Handle vector embeddings and storage with Qdrant"""
 
     def __init__(self):
-        # Initialize local sentence transformer model
-        self.embedding_model = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
+        self.embedding_model = get_embedding_model()
         self.embedding_dimension = 384  # all-MiniLM-L6-v2 produces 384-dimensional vectors
-
-        # Initialize Qdrant client
-        self.qdrant_client = QdrantClient(
-            url=settings.QDRANT_URL,
-            api_key=settings.QDRANT_API_KEY,
-            verify=False,
-            timeout=10.0,  # Use a float number instead of Timeout object
-            port=None,     # Set port to None
-        )
+        self.qdrant_client = get_qdrant_client()
         self.collection_name = "document_chunks"
 
     def ensure_collection_exists(self):
@@ -176,13 +197,13 @@ class VectorService:
             filter_conditions = {"must": [{"key": "user_id", "match": {"value": user_id}}]}
 
         # Search in Qdrant with more results to allow for deduplication
-        search_result = self.qdrant_client.search(
+        search_result = self.qdrant_client.query_points(
             collection_name=self.collection_name,
-            query_vector=query_embedding,
+            query=query_embedding,
             query_filter=Filter(**filter_conditions),
             limit=limit * 2,  # Get more results to filter duplicates
             score_threshold=0.3  # Minimum similarity score
-        )
+        ).points
 
         # Format and deduplicate results
         results = []

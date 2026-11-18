@@ -2,12 +2,14 @@ import pdfplumber
 import pytesseract
 from PIL import Image
 import io
+import logging
 import os
 import re
 from docx import Document as DocxDocument
 from django.conf import settings
 from .models import ProcessingLog
 
+logger = logging.getLogger(__name__)
 
 class TextExtractor:
     """Extract text from various document formats"""
@@ -41,7 +43,11 @@ class TextExtractor:
 
             if needs_ocr or not text.strip():
                 logger.info("Attempting OCR as no text was extracted or pages appear scanned")
-                text = TextExtractor._ocr_pdf(file_path)
+                ocr_text = TextExtractor._ocr_pdf(file_path)
+                # Keep the text layer unless OCR recovered more (e.g. one blank page
+                # must not discard a whole digital PDF when Tesseract is missing).
+                if len(ocr_text.strip()) > len(text.strip()):
+                    text = ocr_text
 
         except Exception as e:
             logger.error(f"PDF extraction failed: {str(e)}")

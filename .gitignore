@@ -50,9 +50,8 @@ ehthumbs.db
 Thumbs.db
 desktop.ini
 
-# Logs
+# Logs (the logs/ Django app IS tracked)
 *.log
-logs/
 
 # Database
 *.db
@@ -99,6 +98,7 @@ output/
 *.docx
 *.doc
 *.txt
+!requirements.txt
 *.rtf
 
 # API keys and secrets
@@ -114,3 +114,6 @@ config/secrets.json
 *.bak
 *.backup
 *.old
+# Local runtime data
+media/
+qdrant_data/

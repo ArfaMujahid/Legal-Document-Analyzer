@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
@@ -52,6 +53,7 @@ def upload_view(request):
         if form.is_valid():
             document = form.save(commit=False)
             document.user = request.user
+            document.file_name = form.cleaned_data['file'].name
             document.file_type = form.cleaned_data['file'].name.split('.')[-1].lower()
             document.file_size = form.cleaned_data['file'].size
             document.delete_at = timezone.now() + timezone.timedelta(days=60)
@@ -254,9 +256,9 @@ def semantic_search(request, document_id):
                     'score': round(result['score'], 3)
                 })
 
-        # Generate LLM answer if we have results
+        # Generate LLM answer if we have results and an LLM is configured
         answer = None
-        if formatted_results:
+        if formatted_results and settings.OPENROUTER_API_KEY:
             try:
                 answer_service = AnswerService()
                 answer = answer_service.generate_answer(

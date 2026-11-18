@@ -167,6 +167,8 @@ OPENROUTER_LLM_MODEL = os.getenv('OPENROUTER_LLM_MODEL', '')
 
 QDRANT_URL = os.getenv('QDRANT_URL', '')
 QDRANT_API_KEY = os.getenv('QDRANT_API_KEY', '')
+# Used when QDRANT_URL is empty: embedded Qdrant stored on disk, no server needed.
+QDRANT_LOCAL_PATH = Path(os.getenv('QDRANT_LOCAL_PATH', BASE_DIR / 'qdrant_data'))
 
 # Logging configuration
 LOGGING = {

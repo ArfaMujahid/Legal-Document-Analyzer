@@ -196,13 +196,13 @@ document.addEventListener('DOMContentLoaded', function() {
     .then(response => response.json())
     .then(data => {
       if (data.error) {
-        resultsList.innerHTML = `<div class="error">${data.error}</div>`;
+        resultsList.innerHTML = `<div class="error">${escapeHtml(data.error)}</div>`;
       } else {
         displayResults(data.results, data.search_type, data.answer);
       }
     })
     .catch(error => {
-      resultsList.innerHTML = `<div class="error">Search failed: ${error.message}</div>`;
+      resultsList.innerHTML = `<div class="error">Search failed: ${escapeHtml(error.message)}</div>`;
     });
   }
 
@@ -217,9 +217,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Add LLM answer if available
     if (answer) {
       html += `
-        <div class="llm-answer">
-          <p>${answer}</p>
-        </div>
+        <div class="llm-answer">${renderAnswer(answer)}</div>
       `;
     }
 
@@ -229,7 +227,7 @@ document.addEventListener('DOMContentLoaded', function() {
     results.forEach(result => {
       html += `
         <div class="search-result-item">
-          <div class="result-snippet">${result.snippet}</div>
+          <div class="result-snippet">${searchType === 'keyword' ? highlightMatches(formatExcerpt(result.snippet), searchQuery.value) : formatExcerpt(result.snippet)}</div>
           <div class="result-meta">
             ${result.score ? `<small>Score: ${result.score}</small>` : ''}
           </div>

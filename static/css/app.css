@@ -557,6 +557,13 @@ select:focus {
   margin-bottom: 12px;
 }
 
+.result-snippet mark {
+  background: rgba(15, 118, 110, 0.2);
+  color: inherit;
+  border-radius: 3px;
+  padding: 0 2px;
+}
+
 .result-snippet {
   font-size: 0.95rem;
   line-height: 1.5;
@@ -597,6 +604,25 @@ select:focus {
   margin: 0;
   line-height: 1.6;
   color: var(--ink);
+}
+
+.llm-answer > * + * {
+  margin-top: 8px;
+}
+
+.llm-answer ul,
+.llm-answer ol {
+  margin-bottom: 0;
+  padding-left: 20px;
+  line-height: 1.6;
+  color: var(--ink);
+}
+
+.llm-answer code {
+  font-size: 0.9em;
+  padding: 1px 4px;
+  border-radius: 4px;
+  background: rgba(15, 118, 110, 0.12);
 }
 
 .results-container {

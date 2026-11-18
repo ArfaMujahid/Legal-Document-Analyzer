@@ -288,6 +288,9 @@ class TextChunker:
                 if i < len(parts):
                     sentence_part = parts[i].strip()
                     if sentence_part:
+                        # Re-insert the space re.split consumed ("9." + "LIMITATION")
+                        if current_sentence:
+                            current_sentence += ' '
                         current_sentence += sentence_part
 
                     # Add punctuation if available

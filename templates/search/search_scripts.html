@@ -62,13 +62,13 @@ function performSearch(searchType) {
     .then(response => response.json())
     .then(data => {
         if (data.error) {
-            resultsDiv.innerHTML = `<div class="error">${data.error}</div>`;
+            resultsDiv.innerHTML = `<div class="error">${escapeHtml(data.error)}</div>`;
         } else {
             displaySearchResults(data, resultsDiv);
         }
     })
     .catch(error => {
-        resultsDiv.innerHTML = `<div class="error">Search failed: ${error.message}</div>`;
+        resultsDiv.innerHTML = `<div class="error">Search failed: ${escapeHtml(error.message)}</div>`;
     });
 }
 
@@ -83,10 +83,10 @@ function displaySearchResults(data, resultsDiv) {
     data.results.forEach(result => {
         html += `
             <div class="result-item">
-                <strong>${result.document_title}</strong>
-                <p class="muted" style="white-space: pre-wrap; word-wrap: break-word;">${result.snippet}</p>
+                <strong>${escapeHtml(result.document_title)}</strong>
+                <p class="muted" style="white-space: pre-wrap; word-wrap: break-word;">${formatExcerpt(result.snippet)}</p>
                 <div class="result-meta">
-                    <span class="pill">${result.document_type.toUpperCase()}</span>
+                    <span class="pill">${escapeHtml(result.document_type.toUpperCase())}</span>
                     ${result.score ? `<span class="score">Score: ${result.score}</span>` : ''}
                 </div>
             </div>
@@ -115,13 +115,13 @@ function performQA() {
     .then(response => response.json())
     .then(data => {
         if (data.error) {
-            answerDiv.innerHTML = `<div class="error">${data.error}</div>`;
+            answerDiv.innerHTML = `<div class="error">${escapeHtml(data.error)}</div>`;
         } else {
             displayQAAnswer(data, answerDiv);
         }
     })
     .catch(error => {
-        answerDiv.innerHTML = `<div class="error">Q&A failed: ${error.message}</div>`;
+        answerDiv.innerHTML = `<div class="error">Q&A failed: ${escapeHtml(error.message)}</div>`;
     });
 }
 
@@ -129,9 +129,9 @@ function displayQAAnswer(data, answerDiv) {
     let html = '<h3>Answer</h3>';
 
     if (data.evidence_insufficient) {
-        html += `<p class="muted warning">${data.answer}</p>`;
+        html += `<div class="muted warning">${renderAnswer(data.answer)}</div>`;
     } else {
-        html += `<p class="answer-text">${data.answer}</p>`;
+        html += `<div class="answer-text">${renderAnswer(data.answer)}</div>`;
     }
 
     // Add citations if available
@@ -140,9 +140,9 @@ function displayQAAnswer(data, answerDiv) {
         data.citations.forEach((citation, index) => {
             html += `
                 <div class="citation-item">
-                    <span class="citation-ref">${citation.reference}</span>
-                    <span class="citation-doc">${citation.document_title}</span>
-                    <a href="/documents/${citation.document_id}" class="citation-link" target="_blank">View Document</a>
+                    <span class="citation-ref">${escapeHtml(citation.reference)}</span>
+                    <span class="citation-doc">${escapeHtml(citation.document_title)}</span>
+                    <a href="/documents/${encodeURIComponent(citation.document_id)}" class="citation-link" target="_blank">View Document</a>
                 </div>
             `;
         });

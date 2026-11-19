@@ -164,6 +164,10 @@ OPENROUTER_API_KEY = os.getenv('OPENROUTER_API_KEY', '')
 OPENROUTER_BASE_URL = os.getenv('OPENROUTER_BASE_URL', 'https://openrouter.ai/api/v1')
 OPENROUTER_EMBEDDING_MODEL = os.getenv('OPENROUTER_EMBEDDING_MODEL', '')
 OPENROUTER_LLM_MODEL = os.getenv('OPENROUTER_LLM_MODEL', '')
+# Comma-separated models tried in order when the primary one fails (e.g. rate limits).
+OPENROUTER_FALLBACK_MODELS = [
+    m.strip() for m in os.getenv('OPENROUTER_FALLBACK_MODELS', '').split(',') if m.strip()
+]
 
 QDRANT_URL = os.getenv('QDRANT_URL', '')
 QDRANT_API_KEY = os.getenv('QDRANT_API_KEY', '')

@@ -98,6 +98,7 @@ Then edit `.env`:
 
 - `DJANGO_SECRET_KEY`: any long random string.
 - `OPENROUTER_API_KEY` and `OPENROUTER_LLM_MODEL` (optional): enable the AI answer on semantic search. Without them, keyword and semantic search still work.
+- `OPENROUTER_FALLBACK_MODELS` (optional): comma-separated models tried in order when the main one fails. Free models are often rate-limited (HTTP 429).
 - `QDRANT_URL` (optional): leave empty to store vectors in `./qdrant_data` with no server. To use a server, run `docker run -p 6333:6333 qdrant/qdrant` and set `QDRANT_URL=http://localhost:6333`, or point it at Qdrant Cloud with `QDRANT_API_KEY`.
 - OCR for scanned PDFs needs the Tesseract binary (`brew install tesseract`). Digital PDFs, DOCX and TXT don't.
 
@@ -192,8 +193,9 @@ Modify `TextChunker` class in `processing/services.py`:
 #### Changing AI Models
 
 Update `.env` file:
-- `OPENROUTER_LLM_MODEL`: For Q&A
-- `OPENROUTER_EMBEDDING_MODEL`: For semantic search
+- `OPENROUTER_LLM_MODEL`: For AI answers
+- `OPENROUTER_FALLBACK_MODELS`: Backup models for AI answers, tried in order
+- Embeddings run locally: change `EMBEDDING_MODEL_NAME` in `processing/vector_service.py` (and the vector size) to use another sentence-transformers model
 
 ### Troubleshooting
 

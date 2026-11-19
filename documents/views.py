@@ -266,7 +266,8 @@ def semantic_search(request, document_id):
                     context_chunks=formatted_results,
                     document_title=document.title or document.file_name
                 )
-                logger.info(f"Generated LLM answer: {answer[:100]}...")  # Log first 100 chars
+                if answer:
+                    logger.info(f"Generated LLM answer: {answer[:100]}...")  # Log first 100 chars
             except Exception as e:
                 logger.error(f"Error generating LLM answer: {e}")
 
